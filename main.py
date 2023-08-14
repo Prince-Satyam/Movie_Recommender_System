@@ -8,6 +8,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import pickle
 import requests
+import os
 
 
 class movieRecommender():
@@ -16,7 +17,8 @@ class movieRecommender():
             Initialize the constructor
         """
         self.currDir = Path(__file__).parent if "__file__" in locals() else Path.cwd()
-        self.csvFile = r"C:\Python\DataScience\Project\Docs\MoviesData\top10K-TMDB-movies.csv" #self.currDir / "Docs" / "MoviesData" / "top10K-TMDB-movies.csv"
+        self.csvFile = r"C:\Python\Movie_Recommender_System\MoviesDatabase\top10K-TMDB-movies.csv"
+        # self.csvFile = self.currDir / "MoviesDatabase" / "top10K-TMDB-movies.csv"
 
     def getData(self):
         """
@@ -31,6 +33,9 @@ class movieRecommender():
         # Creata a new column with comb of 2 and drop the other two
         moviesData['tags'] = moviesData['overview'] + moviesData['genre']
         newData = moviesData.drop(columns=['overview', 'genre'])
+        print("Storing the data in MoviesList.pkl file...")
+        pickle.dump(newData, open("MoviesList.pkl", 'wb'))
+        print("Data Stored")
         return newData
 
     def getPoster(self, movieId):
@@ -57,8 +62,12 @@ class movieRecommender():
 
         # Use cosine similarity approach to get the closest movie tagline
         similarDatas = cosine_similarity(vectorData)
+        # Save the data in Pickle file
+        print("Storing the datas in Similarity.pkl file...")
+        pickle.dump(similarDatas, open("Similarity.pkl", 'wb'))
+        print("Data stored")
 
-        def suggestMovies(movieName):
+        def suggestMovies(movieName = ""):
             """
                 Sort the similar movies through cosine similarity and
                 return the list of top 5 similar movies with their posters
@@ -77,27 +86,31 @@ class movieRecommender():
             return recommendedList, posterList
 
         # Return the recommended list
-        recommemdations, posterList = suggestMovies(movieName)
-        return recommemdations, posterList, similarDatas
+        if movieName:
+            recommemdations, posterList = suggestMovies(movieName)
+        return recommemdations, posterList
 
-    def main(self):
+    def main(self, executingFromWebPage):
         """
             Main function
         """
-        movieName = "Avatar" # Recommend movies similar to movieName
+        if executingFromWebPage: movieName = ""
+        else: movieName = "Avatar" # Recommend movies similar to movieName
         print("Getting the movies informations from dataset")
         datas = self.getData()
         if not datas.empty:
-            recommemdations, posterList, similarDatas = self.getRecommendations(datas, movieName)
-            print("You can watch...")
-            for movie in recommemdations: print(movie)
+            recommemdations, posterList = self.getRecommendations(datas, movieName)
+            if recommemdations:
+                print("You can watch...")
+                for movie in recommemdations: print(movie)
         else:
             print("Unable to fetch the movies list from database")
-        print("Storing the datas in pickle files...")
-        # Save the data in Pickle file
-        pickle.dump(datas, open('MoviesList.pkl', 'wb'))
-        pickle.dump(similarDatas, open('Similarity.pkl', 'wb'))
-        print("Data stored")
+
 
 recommendObj = movieRecommender()
-recommendObj.main()
+if __name__ == "__main__":
+    executingFromWebPage = False
+    recommendObj.main(executingFromWebPage)
+else:
+    executingFromWebPage = True
+    recommendObj.main(executingFromWebPage)

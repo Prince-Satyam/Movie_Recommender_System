@@ -27,12 +27,20 @@ movieRecommenderObj = movieRecommender()
 currDir = Path(__file__).parent if "__file__" in locals() else Path.cwd()
 dataFilePath = currDir / "MoviesList.pkl"
 similarDataFilePath = currDir / "Similarity.pkl"
+
 isPickleFilePresent = False
-if os.path.exists(dataFilePath) and os.path.exists(similarDataFilePath):
-    movies = pickle.load(open(dataFilePath, 'rb'))
-    similarDatas = pickle.load(open(similarDataFilePath, 'rb'))
-    isPickleFilePresent = True
-else:
+for iter in range(0,3):
+    if os.path.exists(dataFilePath) and os.path.exists(similarDataFilePath):
+        movies = pickle.load(open(dataFilePath, 'rb'))
+        similarDatas = pickle.load(open(similarDataFilePath, 'rb'))
+        isPickleFilePresent = True
+        break
+    else:
+        # Run the main function of main file and create the pickle files
+        movieRecommenderObj.main()
+        continue
+
+if not isPickleFilePresent:
     movies = movieRecommenderObj.getData()
 
 moviesList = movies['title'].values
